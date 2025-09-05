@@ -11,6 +11,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 
@@ -20,22 +21,20 @@ public class TaskController {
     @Autowired
     private TaskService taskService;
 
-
     @PreAuthorize("hasRole('USER')")
     @PostMapping("/addTask")
     public ResponseEntity<?> addTask(@Valid @RequestBody TaskDTO task, Authentication auth) {
 
         String username = auth.getName();
        TaskEntity taskEntity = taskService.addTask(username, task);
-        Map<String, Object> objectsMap = Map.of(
-                "id", taskEntity.getId(),
-                "title", taskEntity.getTitle(),
-                "description", taskEntity.getDescription()
-        );
 
-        return ResponseEntity.ok(objectsMap);
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("id", taskEntity.getId());
+        response.put("title", taskEntity.getTitle());
+        response.put("description", taskEntity.getDescription());
+
+        return ResponseEntity.ok(response);
     }
-
 
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/getTasksAll")
@@ -50,13 +49,12 @@ public class TaskController {
         String username = auth.getName();
 
         TaskEntity taskEntity = taskService.getTask(username, idTask);
-        Map<String, Object> objectsMap = Map.of(
-                "id", taskEntity.getId(),
-                "title", taskEntity.getTitle(),
-                "description", taskEntity.getDescription()
-        );
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("id", taskEntity.getId());
+        response.put("title", taskEntity.getTitle());
+        response.put("description", taskEntity.getDescription());
 
-        return ResponseEntity.ok(objectsMap);
+        return ResponseEntity.ok(response);
     }
 
     @PreAuthorize("hasRole('USER')")
@@ -72,14 +70,30 @@ public class TaskController {
     public ResponseEntity<?> updateTask(@PathVariable Long idTask, @Valid @RequestBody TaskDTO task, Authentication auth) {
         String username = auth.getName();
         TaskEntity updatedTask = taskService.updateTask(username, idTask, task);
-        Map<String, Object> objectsMap = Map.of(
-                "id", updatedTask.getId(),
-                "title", updatedTask.getTitle(),
-                "description", updatedTask.getDescription()
-        );
 
-        return ResponseEntity.ok(objectsMap);
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("id", updatedTask.getId());
+        response.put("title", updatedTask.getTitle());
+        response.put("description", updatedTask.getDescription());
+
+        return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("hasRole('USER')")
+    @GetMapping("/getTaskFilter")
+    public ResponseEntity<?> getTaskFilter(@RequestParam(defaultValue = "0") int page,
+                                           @RequestParam(defaultValue = "10") int limit,
+                                           Authentication auth) {
+        String username = auth.getName();
+
+        return ResponseEntity.ok(taskService.getTasksPaginated(username, page, limit));
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/admin/tasks")
+    public ResponseEntity<?> adminGetAllTasks() {
+        // Endpoint para verificar que funciona el acceso solo para ADMIN
+        return ResponseEntity.ok("Admin: All tasks data");
+    }
 
 }

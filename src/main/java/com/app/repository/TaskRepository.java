@@ -2,6 +2,8 @@ package com.app.repository;
 
 import com.app.controller.dto.TaskDTO;
 import com.app.models.TaskEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.query.Param;
@@ -22,5 +24,8 @@ public interface TaskRepository extends CrudRepository<TaskEntity, Long> {
     @Query("SELECT t FROM TaskEntity t WHERE t.user.username = :username AND t.id = :taskId")
     Optional<TaskEntity> findByUsernameIdAndTaskId(@Param("username") String username,
                                                @Param("taskId") Long taskId);
+
+    Page<TaskEntity> findByUserUsername(String username, Pageable pageable);
+
 
 }
