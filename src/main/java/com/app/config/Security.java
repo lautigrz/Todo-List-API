@@ -6,6 +6,7 @@ import com.app.config.handler.CustomAccessDeniedHandler;
 import com.app.config.handler.CustomAuthenticationEntryPoint;
 import com.app.config.filter.JwtAuthorizationFilter;
 import com.app.config.jwt.JwtUtils;
+import com.app.service.RefreshTokenService;
 import com.app.service.UserDetailsServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -34,6 +35,9 @@ public class Security {
     private UserDetailsServiceImpl userDetailsService;
 
     @Autowired
+    private RefreshTokenService refreshTokenService;
+
+    @Autowired
     private JwtUtils jwtUtils;
 
     @Autowired
@@ -51,14 +55,14 @@ public class Security {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity, AuthenticationManager authenticationManager) throws Exception {
 
-        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtUtils);
+        JwtAuthenticationFilter jwtAuthenticationFilter = new JwtAuthenticationFilter(jwtUtils, refreshTokenService);
         jwtAuthenticationFilter.setAuthenticationManager(authenticationManager);
-       // jwtAuthenticationFilter.setFilterProcessesUrl("/login");
+
         return httpSecurity
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(authorizeRequests ->{
                     authorizeRequests
-                            .requestMatchers("/register").permitAll()
+                            .requestMatchers("/register","/auth/refresh").permitAll()
                             .anyRequest().authenticated();
                 })
                 .exceptionHandling(exceptions -> {

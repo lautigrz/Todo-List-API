@@ -1,7 +1,9 @@
 package com.app.config.filter;
 
 import com.app.config.jwt.JwtUtils;
+import com.app.models.RefreshToken;
 import com.app.models.UserEntity;
+import com.app.service.RefreshTokenService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -17,13 +19,15 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.UUID;
 
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private JwtUtils jwtUtils;
-
-    public JwtAuthenticationFilter(JwtUtils jwtUtils) {
+    private RefreshTokenService refreshTokenService;
+    public JwtAuthenticationFilter(JwtUtils jwtUtils, RefreshTokenService refreshToken) {
         this.jwtUtils = jwtUtils;
+        this.refreshTokenService = refreshToken;
     }
 
     @Override
@@ -54,10 +58,13 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         User user = (User) authResult.getPrincipal();
 
         String token = jwtUtils.generateToken(user.getUsername());
+        String refreshToken = UUID.randomUUID().toString();
+        refreshTokenService.save(user.getUsername(), refreshToken);
         response.addHeader("Authorization", token);
 
         Map<String, Object> httpResponse = Map.of(
-                "token", token
+                "token", token,
+                "refreshToken", refreshToken
         );
 
         response.getWriter().write(new ObjectMapper().writeValueAsString(httpResponse));
